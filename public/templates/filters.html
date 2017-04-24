@@ -1,0 +1,9 @@
+<form role="form">
+  <div class="kuiLocalDropdownTitle">Active Filters</div>
+  <div class="row" ng-repeat="(filter, value) in tagFilters">
+    <div class="form-group col-md-12">
+      <label>{{ filter }} = {{ value }}</label>
+    </div>
+  </div>
+</form>
+

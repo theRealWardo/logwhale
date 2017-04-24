@@ -3,26 +3,14 @@ import exampleRoute from './server/routes/example';
 
 export default function (kibana) {
   return new kibana.Plugin({
-    require: ['elasticsearch'],
+    require: ['kibana', 'elasticsearch'],
 
     uiExports: {
-      
       app: {
-        title: 'Logwhale',
-        description: 'Plugin to view, search &amp; tail logs from containers in Kibana.',
+        title: 'LogWhale',
+        description: 'A Kibana plugin for tailing logs from containers.',
         main: 'plugins/logwhale/app'
-      },
-      
-      
-      translations: [
-        resolve(__dirname, './translations/es.json')
-      ],
-      
-      
-      hacks: [
-        'plugins/logwhale/hack'
-      ]
-      
+      }
     },
 
     config(Joi) {
@@ -31,12 +19,9 @@ export default function (kibana) {
       }).default();
     },
 
-    
     init(server, options) {
       // Add server routes and initalize the plugin here
       exampleRoute(server);
     }
-    
-
   });
 };

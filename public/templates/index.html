@@ -1,13 +1,44 @@
-<div class="container" ng-controller="logwhaleHelloWorld">
-  <div class="row">
-    <div class="col-12-sm">
-      <div class="well">
-        <h2>Congratulations</h2>
-        <p class="lead">You've successfully created your first Kibana Plugin!</p>
+<div class="logwhale-container" ng-controller="logwhale">
+
+  <kbn-top-nav name="logwhale" config="topNavMenu">
+    <div data-transclude-slots>
+      <div data-transclude-slot="topLeftCorner">
+        {{ view }}
       </div>
-      <h1>{{ title }}</h1>
-      <p class="lead">{{ description }}</p>
-      <p>The current time is {{ currentTime }}</p>
+      <form
+        data-transclude-slot="bottomRow"
+        class="fullWidth"
+        role="form"
+        ng-submit="search()"
+      >
+        <div class="kuiLocalSearch">
+          <input
+            input-focus
+            placeholder="Search..."
+            aria-label="Search input"
+            type="text"
+            class="kuiLocalSearchInput"
+          >
+          <button
+            type="submit"
+            aria-label="Search"
+            class="kuiLocalSearchButton"
+          >
+            <span class="fa fa-search"></span>
+          </button>
+        </div>
+      </form>
     </div>
+  </kbn-top-nav>
+
+
+  <div class="container" id="logwhale-container">
+    <div class="logline" ng-repeat="message in messages track by message.id">
+      <span class="time">{{ message.displayTimestamp }} </span>
+      <span class="tag" ng-repeat="tag in tagView track by $index" ng-click="addFilter(tag, message[tag])"> {{ message[tag] }} </span>
+      <span class="message">{{ message.message }}</span>
+    </div>
+    <div class="logline">&nbsp;</div>
   </div>
+
 </div>

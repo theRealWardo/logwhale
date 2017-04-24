@@ -4,7 +4,7 @@
   "description": "Plugin to view, search &amp; tail logs from containers in Kibana.",
   "main": "index.js",
   "kibana": {
-    "version": "5.1.0"
+    "version": "5.3.0"
   },
   "scripts": {
     "lint": "eslint",
@@ -13,6 +13,9 @@
     "test:browser": "plugin-helpers test:browser",
     "build": "plugin-helpers build",
     "postinstall": "plugin-helpers postinstall"
+  },
+  "dependencies": {
+    "flat" : "2.0.1"
   },
   "devDependencies": {
     "@elastic/eslint-config-kibana": "0.0.2",
