@@ -9,6 +9,8 @@ import template from './templates/index.html';
 import settingsTemplate from './templates/settings.html';
 import filtersTemplate from './templates/filters.html';
 
+const MAX_MESSAGES = 1000;
+
 uiRoutes.enable();
 uiRoutes
 .when('/', {
@@ -56,12 +58,32 @@ uiModules
   // The messages to display.
   $scope.messages = [];
 
+  // The message ids that are already in the messages list.
+  let messageMap = {};
+  let appendMessages = (msgs) => {
+    msgs.forEach((msg) => {
+      if (!messageMap[msg.id]) {
+        messageMap[msg.id] = true;
+        let finalMsg = msg;
+        finalMsg.displayTimestamp = moment.utc(msg.timestamp).local().format($scope.timestampFormat);
+        $scope.messages.push(finalMsg);
+      }
+    });
+    // Clean up if we have over 1k messages to prevent browser explosions!
+    if ($scope.messages.length > MAX_MESSAGES) {
+      let toDrop = $scope.messages.length - MAX_MESSAGES;
+      $scope.messages.slice(0, toDrop).map((msg) => {
+        delete messageMap[msg.id];
+      });
+      $scope.messages = $scope.messages.slice(toDrop);
+    }
+  };
+
   $scope.startTailing = () => {
     // Run the scroll after the DOM updates to ensure pretty animations happen.
     $timeout(() => {
-      let container = document.getElementById('logwhale-container');
-      $(container).animate({
-        scrollTop: $(container.lastElementChild).offset().top
+      $('#logwhale-container').animate({
+        scrollTop: document.getElementById('logwhale-container').scrollHeight
       }, 1000);
     }, 0);
   };
@@ -72,6 +94,11 @@ uiModules
     if (!force && !$scope.tail) {
       // Only refresh if we are tailing the logs.
       return;
+    }
+    if (force) {
+      // Clear the message list on force refresh.
+      $scope.messages = [];
+      messageMap = {};
     }
     if (refreshTimeout) {
       $timeout.cancel(refreshTimeout);
@@ -88,16 +115,15 @@ uiModules
       tagMap: $scope.tagMap,
       tagFilters: $scope.tagFilters,
     }).then((resp) => {
-      // Reverse the list that arrived in descending timestamp order and
-      // Decorate the messages with the "displayTimestamp".
-      $scope.messages = resp.data.messages.reverse().map((msg) => {
-        let message = msg;
-        message.displayTimestamp = moment(msg.timestamp).format($scope.timestampFormat);
-        return message;
-      });
-      if ($scope.tail) {
-        $scope.startTailing();
-        refreshTimeout = $timeout($scope.refresh, $scope.refreshIntervalSecs * 1000);
+      // Only update the messages if the user didn't pause mid-flight.
+      if (force || $scope.tail) {
+        // Reverse the list that arrived in descending timestamp order and
+        // Decorate the messages with the "displayTimestamp".
+        appendMessages(resp.data.messages.reverse());
+        if ($scope.tail) {
+          refreshTimeout = $timeout($scope.refresh, $scope.refreshIntervalSecs * 1000);
+          $scope.startTailing();
+        }
       }
     });
   };
@@ -127,8 +153,8 @@ uiModules
       run: () => {
         $scope.tail = !$scope.tail;
         if ($scope.tail) {
-          $scope.startTailing();
           $scope.refresh();
+          $scope.startTailing();
         }
       },
       testId: 'logwhaleLiveButton',
