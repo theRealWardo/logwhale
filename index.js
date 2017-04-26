@@ -9,7 +9,8 @@ export default function (kibana) {
       app: {
         title: 'LogWhale',
         description: 'A Kibana plugin for tailing logs from containers.',
-        main: 'plugins/logwhale/app'
+        main: 'plugins/logwhale/app',
+        icon: 'plugins/logwhale/logo.svg'
       }
     },
 

@@ -1,6 +1,6 @@
 # logwhale
 
-> Plugin to view, search & tail logs from containers in Kibana.
+> A Kibana plugin for tailing logs from containers.
 
 ---
 
