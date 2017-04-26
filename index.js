@@ -1,5 +1,6 @@
 import { resolve } from 'path';
-import exampleRoute from './server/routes/example';
+import searchRoute from './server/routes/search';
+import indicesRoute from './server/routes/indices';
 
 export default function (kibana) {
   return new kibana.Plugin({
@@ -21,8 +22,8 @@ export default function (kibana) {
     },
 
     init(server, options) {
-      // Add server routes and initalize the plugin here
-      exampleRoute(server);
+      searchRoute(server);
+      indicesRoute(server);
     }
   });
 };

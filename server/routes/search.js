@@ -1,29 +1,4 @@
-import flat from 'flat';
-
-const messagesForClient = (resp, messageField, timestampField, tagMap) => {
-  return resp.hits.hits.map((msg) => {
-    let source = flat(msg._source);
-    let message = {
-      id: source['@uuid'],
-      message: source[messageField],
-      timestamp: source[timestampField],
-    };
-    Object.keys(tagMap).forEach((tag) => {
-      message[tag] = source[tagMap[tag]];
-    });
-    return message;
-  });
-}
-
-const dateRegexp = /[0-9]{4}\.[0-9]{2}\.[0-9]{2}/;
-
-const indexWithoutDate = (index) => {
-  let result = dateRegexp.exec(index);
-  if (result) {
-    return index.substr(0, result.index) + '*';
-  }
-  return index;
-}
+import { messagesForClient } from '../utils';
 
 export default function (server) {
 
@@ -108,47 +83,6 @@ export default function (server) {
             messages: messagesForClient(resp, req.payload.messageField, req.payload.timestampField, req.payload.tagMap)
           });
         }
-      }).catch(function (resp) {
-        reply({
-          resp,
-          ok: false,
-        });
-      });
-    }
-  });
-
-  /**
-   *
-   * /api/logwhale/indices
-   *
-   * {
-   *   ok: true,
-   *   indices: ["logstash-*"]
-   * }
-   *
-   * Looks up all potentially queryable indices and returns them as a list.
-   */
-  server.route({
-    path: '/api/logwhale/indices',
-    method: 'GET',
-    handler(req, reply) {
-      const { callWithRequest } = server.plugins.elasticsearch.getCluster('data');
-      // h: 'i' => display just the index name
-      // s: 'i:asc' => sort by the index name ascending
-      callWithRequest(req, 'cat.indices', {h: 'i', s: 'i:asc'}).then(function (resp) {
-        let indices = [];
-        resp.split('\n').forEach((index) => {
-          if (index.length > 0 && index[0] != '.') {
-            let newIndex = indexWithoutDate(index);
-            if (indices.indexOf(newIndex) < 0) {
-              indices.push(newIndex);
-            }
-          }
-        });
-        reply({
-          indices,
-          ok: true,
-        });
       }).catch(function (resp) {
         reply({
           resp,
