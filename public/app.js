@@ -53,9 +53,6 @@ uiModules
   // Should we actually continaully refresh and try to tail the logs?
   $scope.tail = true;
 
-  // Search term for filtering messages.
-  $scope.search = '';
-
   // The messages to display.
   $scope.messages = [];
 
@@ -80,9 +77,11 @@ uiModules
       $timeout.cancel(refreshTimeout);
       refreshTimeout = null;
     }
+    // Sure I would have loved to do this with ng-model but that didn't work.
+    let searchEl = document.getElementById('logwhale-search');
     $http.post(chrome.addBasePath('/api/logwhale/search'), {
       index: $scope.esIndex,
-      search: $scope.search,
+      search: searchEl ? searchEl.value : '',
       maxRecords: $scope.maxRecords,
       messageField: $scope.messageField,
       timestampField: $scope.timestampField,
