@@ -15,8 +15,45 @@ const messagesForClient = (resp, messageField, timestampField, tagMap) => {
   });
 }
 
+const dateRegexp = /[0-9]{4}\.[0-9]{2}\.[0-9]{2}/;
+
+const indexWithoutDate = (index) => {
+  let result = dateRegexp.exec(index);
+  if (result) {
+    return index.substr(0, result.index) + '*';
+  }
+  return index;
+}
+
 export default function (server) {
 
+  /**
+   *
+   * /api/logwhale/search
+   * {
+   *   index: "logstash-*",
+   *   maxRecords: 100,
+   *   messageField: "@message",
+   *   search: "query",
+   *   tagFilters: {tagName: "valueForFiltering"},
+   *   tagMap: {tagName: "@field"},
+   *   timestampField: "@timestamp"
+   * }
+   *
+   * {
+   *   ok: true,
+   *   messages: [
+   *     {
+   *       tag: "@fieldvalue",
+   *       message: "@messagevalue",
+   *       timestamp: "ISO-8601 time"
+   *     },
+   *     ...
+   *   ]
+   * }
+   *
+   * Searches through an index and assembles log messages for presentation.
+   */
   server.route({
     path: '/api/logwhale/search',
     method: 'POST',
@@ -59,7 +96,6 @@ export default function (server) {
         termQuery.term[field] = { value };
         esRequest.body.query.bool.must.push(termQuery);
       });
-      console.log(JSON.stringify(esRequest));
 
       callWithRequest(req, 'search', esRequest).then(function (resp) {
         if (req.payload.raw) {
@@ -72,6 +108,47 @@ export default function (server) {
             messages: messagesForClient(resp, req.payload.messageField, req.payload.timestampField, req.payload.tagMap)
           });
         }
+      }).catch(function (resp) {
+        reply({
+          resp,
+          ok: false,
+        });
+      });
+    }
+  });
+
+  /**
+   *
+   * /api/logwhale/indices
+   *
+   * {
+   *   ok: true,
+   *   indices: ["logstash-*"]
+   * }
+   *
+   * Looks up all potentially queryable indices and returns them as a list.
+   */
+  server.route({
+    path: '/api/logwhale/indices',
+    method: 'GET',
+    handler(req, reply) {
+      const { callWithRequest } = server.plugins.elasticsearch.getCluster('data');
+      // h: 'i' => display just the index name
+      // s: 'i:asc' => sort by the index name ascending
+      callWithRequest(req, 'cat.indices', {h: 'i', s: 'i:asc'}).then(function (resp) {
+        let indices = [];
+        resp.split('\n').forEach((index) => {
+          if (index.length > 0 && index[0] != '.') {
+            let newIndex = indexWithoutDate(index);
+            if (indices.indexOf(newIndex) < 0) {
+              indices.push(newIndex);
+            }
+          }
+        });
+        reply({
+          indices,
+          ok: true,
+        });
       }).catch(function (resp) {
         reply({
           resp,

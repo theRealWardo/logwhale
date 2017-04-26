@@ -1,8 +1,14 @@
 <form role="form">
   <div class="kuiLocalDropdownTitle">Active Filters</div>
   <div class="row" ng-repeat="(filter, value) in tagFilters">
+    <div class="form-group col-md-12 clearfix">
+      <div class="logwhale-filter"><i class="fa fa-trash" ng-click="removeFilter(filter)"></i> {{ filter }}: {{ value }}</div>
+    </div>
+  </div>
+  <div class="row" ng-show="tagFilters.length == 0">
     <div class="form-group col-md-12">
-      <label>{{ filter }} = {{ value }}</label>
+      <label>There are no active filters.</label>
+      <label class="small">Click one of the colored tags to filter by that value.</label>
     </div>
   </div>
 </form>
