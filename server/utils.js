@@ -1,11 +1,10 @@
 import flat from 'flat';
 
-
 export const messagesForClient = (resp, messageField, timestampField, tagMap) => {
   return resp.hits.hits.map((msg) => {
     let source = flat(msg._source);
     let message = {
-      id: source['@uuid'],
+      id: source['@uuid'] || source['@realtime_timestamp'] || (source[messageField] + source[timestampField]),
       message: source[messageField],
       timestamp: source[timestampField],
     };

@@ -22,7 +22,7 @@ uiModules
 .controller('logwhale', function ($scope, $route, $interval, $timeout, $http) {
 
   // The index to query for log data.
-  $scope.esIndex = 'logstash-*';
+  $scope.esIndex = 'beatname-*';
   // The maximum number of records to return
   $scope.maxRecords = 100;
 
@@ -34,21 +34,19 @@ uiModules
   $scope.timestampFormat = 'MMM DD HH:mm:ss';
 
   // The message field to display.
-  $scope.messageField = '@message';
+  $scope.messageField = 'message';
 
   // A map of tags to the actual field name in ElasticSearch.
   $scope.tagMap = {
-    'hostname': '@source_host',
-    'program': '@fields.programname',
-    'rancher': '@fields.io.rancher.container.name',
-    'instance': '@fields.io.rancher.stack_service.name',
-    'compose': '@fields.com.docker.compose.service',
-    'container': '@fields.ContainerID'
+    'hostname': 'hostname',
+    'namespace': 'docker.io.kubernetes.pod.namespace',
+    'pod': 'docker.io.kubernetes.pod.name',
+    'container': 'docker.io.kubernetes.container.name'
   };
   // Map of tags to a value to filter them to.
   $scope.tagFilters = {};
   // List of tags to display between the timestamp + message.
-  $scope.tagView = ['rancher', 'instance', 'compose', 'program'];
+  $scope.tagView = ['namespace', 'pod'];
 
   // How often should we try to fetch new logs?
   $scope.refreshIntervalSecs = 5;
@@ -62,6 +60,9 @@ uiModules
   let messageMap = {};
   let appendMessages = (msgs) => {
     msgs.forEach((msg) => {
+      if (!msg.id) {
+        msg.id = msg.timestamp;
+      }
       if (!messageMap[msg.id]) {
         messageMap[msg.id] = true;
         let finalMsg = msg;
